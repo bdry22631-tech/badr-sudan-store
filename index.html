@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badr Sudan - متجر التطبيقات</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --text-color: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px; background: var(--card-bg); border-radius: 12px; }
+        header h1 { color: var(--accent-color); font-size: 2rem; margin-bottom: 5px; }
+        header p { color: var(--text-secondary); }
+        .nav-admin { text-align: center; margin-bottom: 20px; }
+        .nav-admin a { color: var(--accent-color); text-decoration: none; font-size: 0.9rem; background: var(--card-bg); padding: 8px 15px; border-radius: 6px; border: 1px solid #334155; }
+        .apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .app-card { background: var(--card-bg); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+        .app-info h3 { margin-bottom: 8px; font-size: 1.25rem; }
+        .app-info p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 15px; }
+        .app-footer { display: flex; justify-content: space-between; align-items: center; }
+        .download-btn { background: var(--accent-color); color: #0f172a; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Badr Sudan Apps</h1>
+        <p>متجرك الخاص لتحميل التطبيقات</p>
+    </header>
+
+    <div class="nav-admin">
+        <a href="admin.html">⚙️ لوحة إدارة ورفع التطبيقات</a>
+    </div>
+
+    <div class="apps-grid" id="appsContainer">
+        <!-- سيتم جلب التطبيقات هنا تلقائياً -->
+        <p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">جاري تحميل التطبيقات...</p>
+    </div>
+
+    <!-- ربط Firebase لاسترجاع البيانات -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // استبدل هذه الإعدادات بإعدادات مشروعك في Firebase
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadApps() {
+            const container = document.getElementById('appsContainer');
+            container.innerHTML = "";
+            try {
+                const querySnapshot = await getDocs(collection(db, "apps"));
+                if (querySnapshot.empty) {
+                    container.innerHTML = "<p style='text-align:center; color:var(--text-secondary); grid-column:1/-1;'>لا توجد تطبيقات مرفوعة حالياً.</p>";
+                    return;
+                }
+                querySnapshot.forEach((doc) => {
+                    const appData = doc.data();
+                    container.innerHTML += `
+                        <div class="app-card">
+                            <div class="app-info">
+                                <h3>${appData.name}</h3>
+                                <p>${appData.description}</p>
+                            </div>
+                            <div class="app-footer">
+                                <span style="font-size:0.8rem; color:#94a3b8;">الإصدار: ${appData.version || '1.0'}</span>
+                                <a href="${appData.link}" class="download-btn" target="_blank">تحميل APK</a>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                container.innerHTML = "<p style='text-align:center; color:#ef4444; grid-column:1/-1;'>خطأ في الاتصال بقاعدة البيانات.</p>";
+            }
+        }
+
+        loadApps();
+    </script>
+</body>
+</html>
